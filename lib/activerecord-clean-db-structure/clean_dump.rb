@@ -128,6 +128,9 @@ module ActiveRecordCleanDbStructure
       # Reduce 2+ lines of whitespace to one line of whitespace
       dump.gsub!(/\n{2,}/m, "\n\n")
 
+      # Enums in a single line
+      dump.gsub!(/^(CREATE TYPE \S+ AS ENUM )\(((:?\s*'\w+',)*\s*'\w+'\s*)\)/) { "#{$1}(#{$2.squish})" }
+
       if options[:order_column_definitions] == true
         dump.replace(order_column_definitions(dump))
       end
