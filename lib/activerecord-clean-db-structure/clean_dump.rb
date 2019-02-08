@@ -125,6 +125,11 @@ module ActiveRecordCleanDbStructure
         end
       end
 
+      # Remove 'public.' prefix since it is applied by default and thus is redundant.
+      # See also https://github.com/lfittl/activerecord-clean-db-structure/issues/10
+      dump.gsub!(/\bpublic\.(\w+)/, '\1')
+      dump.gsub!(/^.+set_config.+search_path.+$/, '')
+
       # Remove unnecessary comments
       ['COMMENT', 'CONSTRAINT', 'FK CONSTRAINT', 'EXTENSION', 'TABLE', 'TYPE'].each do |comment_type|
         dump.gsub!(/^-- Name: [^;]+; Type: #{comment_type}\n+/, '')
