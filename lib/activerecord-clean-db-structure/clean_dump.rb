@@ -125,6 +125,14 @@ module ActiveRecordCleanDbStructure
         end
       end
 
+      # Remove unnecessary comments
+      ['COMMENT', 'CONSTRAINT', 'FK CONSTRAINT', 'EXTENSION', 'TABLE', 'TYPE'].each do |comment_type|
+        dump.gsub!(/^-- Name: [^;]+; Type: #{comment_type}\n+/, '')
+      end
+
+      # Remove multiple empty lines in the end of the file
+      dump.gsub!(/\n{2,}\z/, "\n")
+
       # Reduce 2+ lines of whitespace to one line of whitespace
       dump.gsub!(/\n{2,}/m, "\n\n")
 
