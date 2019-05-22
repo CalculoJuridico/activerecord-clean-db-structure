@@ -125,6 +125,26 @@ module ActiveRecordCleanDbStructure
         end
       end
 
+      # Extract constraints, remove comments and join them together at the end
+      if first_constraint_index = dump.index(/^ALTER.+TABLE.+ONLY.+\s+ADD.+CONSTRAINT[^;]+;\n+/)
+        all_constraints_in_compact_form =
+          dump
+            .scan(/^ALTER.+TABLE.+ONLY.+\s+ADD.+CONSTRAINT[^;]+;\n+/)
+            .group_by { |line| line.scan(/^ALTER.+TABLE.+ONLY.+\n+/).first }
+            .map do |table_line, table_and_constraint_text|
+              [
+                table_line,
+                table_and_constraint_text
+                  .map { |constraint_lines| constraint_lines.split(/;?\n+/).last }
+                  .join(",\n")
+                  .concat(";\n")
+              ].join
+            end.sort.join("\n")
+
+        dump.gsub!(/^ALTER.+TABLE.+ONLY.+\s+ADD.+CONSTRAINT[^;]+;\n+/, '')
+        dump.insert(first_constraint_index, all_constraints_in_compact_form)
+      end
+
       # Remove 'public.' prefix since it is applied by default and thus is redundant.
       # See also https://github.com/lfittl/activerecord-clean-db-structure/issues/10
       dump.gsub!(/\bpublic\.(\w+)/, '\1')
